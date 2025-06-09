@@ -1,109 +1,98 @@
-# jobFinder
+# Job Finder Script
 
 This Python script allows you to search for job listings near a specific location using the HigherMe API. It first converts a location (postal code or city name) to geographic coordinates, then fetches nearby job listings based on those coordinates.
 
-Features
-Convert locations to latitude/longitude coordinates
+## Features
+- Convert locations to latitude/longitude coordinates
+- Search for jobs within a specified distance (in miles)
+- Save job listings to a CSV file
+- Works with postal codes or city names
+- Designed for Canadian locations (modifiable for other countries)
 
-Search for jobs within a specified distance (in miles)
+## Requirements
+- Python 3.x
+- Required packages:
+  ```bash
+  pip install requests pandas pgeocode
 
-Save job listings to a CSV file
+## Installation
+-Download the script or clone the repository
+-Install required dependencies:
+--pip install requests pandas pgeocode
 
-Works with postal codes or city names
+### Location parameters
+-country = "CA"  # ISO country code (e.g., "US" or "CA")
+-postal_code = ""  # Enter postal code (e.g., "M5V 2T6")
+-place_name = "Toronto"  # Enter city name if no postal code
 
-Designed for Canadian locations (can be modified for other countries)
+-Search parameters
+-distance = 5  # Search radius in miles
 
-Requirements
-Python 3.x
+-Run the script:
+--python job_finder.py
+-Find results in jobs.csv in your current directory
 
-Required Python packages:
+## Functions
+-get_lat_lon(country_code, postal_code=None, place_name=None)
+-Converts a location to geographic coordinates using pgeocode.
 
-bash
-pip install requests pandas pgeocode
-How to Use
-Set your location parameters:
+-Parameters
+--country_code (str): ISO 3166-1 alpha-2 country code (e.g., "CA", "US")
+--postal_code (str, optional): Postal/ZIP code
+--place_name (str, optional): Name of a place (city, town, etc.)
+--Returns: Tuple (latitude, longitude) or (None, None) if not found
 
-Modify the country, postal_code, and place_name variables at the bottom of the script
+-Behavior:
+--Prioritizes postal codes for more accurate results
 
-Set the search distance (in miles) in the get_jobs() call
+--Falls back to place name search if postal code not provided or invalid
 
-Run the script:
+--Selects best match based on GeoNames accuracy score
 
-bash
-python job_finder.py
-Check the output:
+--get_jobs(lat, lng, distance=20)
+--Fetches job listings from HigherMe API near specified coordinates.
 
-Job listings will be saved to jobs.csv in your current directory
+## Parameters
+-lat (float): Latitude coordinate
+-lng (float): Longitude coordinate
+-distance (int): Search radius in miles (default: 20)
 
-Coordinates will be printed in the console
+## Workflow
+-Constructs API request with proper headers and parameters
+-Processes JSON response into structured job data
 
-Functions
-get_lat_lon(country_code, postal_code=None, place_name=None)
-Converts a location to geographic coordinates.
+## Extracts
+-Job ID
+-Job title
+-Location (city + postal code)
+-Company name
+-Job summary (HTML-free)
+-Saves results to CSV file (jobs.csv)
 
-Parameters:
+## API Endpoint
+-https://api.higherme.com/classic/jobs?page=1&includes=location,location.company,location.externalServiceReferences&limit=24&filters[brand.id]=58bd9e7f472bd&filters[lat]={lat}&filters[lng]={lng}&filters[distance]={distance}&sort[distance]=asc
 
-country_code: ISO country code (e.g., "CA" for Canada)
+## Sample Output
+-Console Output
+--Coordinates for Toronto: (43.6532, -79.3832)
+-jobs.csv
 
-postal_code: Postal code (optional)
+id,title,location,company,summary
+abc123,Shift Manager,"city: Toronto, postalCode: M5V 2T6",Tim Hortons,"Manage daily operations, staff scheduling..."
+def456,Barista,"city: Toronto, postalCode: M5V 2Z4",Tim Hortons,"Prepare beverages, maintain clean workspace..."
 
-place_name: City name (optional)
+## Troubleshooting
+  Issue	                        Solution
+No jobs found	            Increase distance value
+                          Verify coordinates are valid
+                          
+Coordinate errors	        Check postal code format 
+                          Try nearby city name instead  
+                          
+API returns 403 error	    Update headers (especially user-agent and higherme-client-version)
 
-Returns: Tuple (latitude, longitude)
+Missing company names	    Check if API structure changed
+                          Add error handling for missing keys
+                          
+Canadian locations only	   Change country code to "US" and use ZIP codes
 
-get_jobs(lat, lng, distance=20)
-Fetches job listings near specified coordinates.
-
-Parameters:
-
-lat: Latitude
-
-lng: Longitude
-
-distance: Search radius in miles (default: 20)
-
-Output: Saves results to jobs.csv with columns:
-
-id: Job ID
-
-title: Job title
-
-location: City and postal code
-
-company: Company name
-
-summary: Job description
-
-Example Usage
-python
-# Get coordinates for Toronto
-lat, lon = get_lat_lon("CA", place_name="Toronto")
-print(f"Coordinates: ({lat}, {lon})")
-
-# Search for jobs within 5 miles
-get_jobs(lat, lon, 5)
-Sample Output (jobs.csv)
-id	title	location	company	summary
-abc123	Shift Manager	Toronto, M5V 2T6	Restaurant Co	Manage daily operations...
-xyz789	Barista	Toronto, M5V 2Z4	Coffee Shop	Prepare coffee drinks...
-Notes
-The script is currently configured to search for jobs at brand ID 58bd9e7f472bd (Tim Hortons Canada). To search for other brands:
-
-Update the filters[brand.id] parameter in the URL
-
-Modify the brand.id value in both the URL and querystring
-
-For use outside Canada:
-
-Change the country code in get_lat_lon() calls
-
-Verify API supports your target region
-
-The headers contain browser-specific information that might need periodic updating to mimic a real browser
-
-Troubleshooting
-No results? Try increasing the search distance
-
-Coordinate errors? Verify your location names with official postal codes
-
-API errors? Check if headers need updating (particularly user-agent and higherme-client-version)
